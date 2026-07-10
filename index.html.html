@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>1-5 상담 신청</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
+
+  :root{
+    --bg: #EAF5FC;
+    --paper: #FFFFFF;
+    --paper-warm: #F5FAFE;
+    --ink: #1F2A37;
+    --ink-soft: #5B7284;
+    --ink-faint: #93A9BA;
+    --primary: #0EA5E9;
+    --primary-dark: #0284C7;
+    --accent: #38BDF8;
+    --success: #22A366;
+    --success-dark: #16824F;
+    --danger: #E24C4C;
+    --danger-dark: #BE3939;
+    --border: #CFE7F5;
+    --shadow: rgba(14,165,233,0.10);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans KR', sans-serif;
+    line-height:1.55;
+    min-height:100vh;
+    padding:32px 16px 64px;
+  }
+
+  h1,h2,h3{ font-family:'Noto Sans KR', sans-serif; font-weight:800; margin:0; }
+
+  .wrap{ max-width:480px; margin:0 auto; }
+  .wrap.wide{ max-width:760px; }
+  .wrap.xwide{ max-width:980px; }
+
+  .brand{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    margin-bottom:28px;
+  }
+  .brand svg{ width:30px; height:30px; flex-shrink:0; }
+  .brand-text{ text-align:left; }
+  .brand-text h1{ font-size:22px; color:var(--primary-dark); letter-spacing:-0.2px;}
+  .brand-text p{ margin:2px 0 0; font-size:12.5px; color:var(--ink-soft); }
+
+  /* ---- card ---- */
+  .note-card{
+    position:relative;
+    background:var(--paper);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:26px 26px 22px;
+    box-shadow:0 2px 10px var(--shadow);
+    margin-bottom:16px;
+  }
+  .note-card.plain{ background:var(--paper); }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px; }
+  .field input, .field textarea{
+    width:100%;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:15px;
+    padding:11px 13px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus, .field textarea:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(61,90,128,0.14);
+  }
+  .field textarea{ min-height:110px; resize:vertical; line-height:1.6; }
+  .field .hint{ font-size:12px; color:var(--ink-faint); margin-top:5px; }
+  .field .err{ font-size:12.5px; color:var(--danger); margin-top:6px; display:none; }
+  .field.has-err input, .field.has-err textarea{ border-color:var(--danger); }
+  .field.has-err .err{ display:block; }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14.5px; font-weight:500;
+    padding:11px 20px;
+    border-radius:999px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .12s ease, background .15s ease, box-shadow .15s ease;
+    width:100%;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{ background:var(--primary); color:#fff; }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border-color:var(--border); }
+  .btn-ghost:hover{ background:var(--paper); }
+  .btn-danger-text{ background:transparent; color:var(--danger); border:none; padding:6px 10px; width:auto; font-size:13px; }
+  .btn-danger-text:hover{ text-decoration:underline; }
+  .btn-text{ background:transparent; color:var(--primary); border:none; padding:6px 10px; width:auto; font-size:13px; }
+  .btn-text:hover{ text-decoration:underline; }
+  .btn-sm{ width:auto; padding:8px 16px; font-size:13.5px; }
+  .btn-row{ display:flex; gap:10px; }
+
+  .link-row{ text-align:center; margin-top:16px; font-size:13.5px; color:var(--ink-soft); }
+  .link-row a{ color:var(--primary); cursor:pointer; text-decoration:none; font-weight:500; }
+  .link-row a:hover{ text-decoration:underline; }
+
+  .foot-link{ text-align:center; margin-top:22px; }
+  .foot-link a{ font-size:12.5px; color:var(--ink-faint); cursor:pointer; }
+  .foot-link a:hover{ color:var(--ink-soft); }
+
+  .top-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:24px; flex-wrap:wrap; gap:10px;
+  }
+  .top-bar h2{ font-size:20px; color:var(--primary-dark); }
+  .top-bar .sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+
+  .section-title{ font-size:16px; margin:30px 0 14px; color:var(--ink); display:flex; align-items:center; gap:8px; }
+  .section-title .count{ font-size:12px; font-weight:500; color:var(--ink-faint); background:var(--paper); padding:2px 9px; border-radius:999px; border:1px solid var(--border); }
+
+  .letter-item{ transition:box-shadow .15s ease; }
+  .letter-item:hover{ box-shadow:0 4px 14px var(--shadow); }
+
+  .letter-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:8px;}
+  .letter-meta{ font-size:12px; color:var(--ink-faint); }
+  .letter-sid{ font-size:12.5px; color:var(--primary-dark); font-weight:600; background:rgba(61,90,128,0.08); padding:2px 9px; border-radius:999px; }
+  .letter-body{ font-size:14.5px; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
+  .letter-actions{ margin-top:12px; display:flex; gap:4px; justify-content:flex-end; }
+
+  .empty{ text-align:center; padding:36px 20px; color:var(--ink-faint); font-size:13.5px; }
+  .empty svg{ width:34px; height:34px; margin-bottom:10px; opacity:0.5; }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* admin */
+  .stat-row{ display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .admin-tabs{ display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--border); }
+  .tab-btn{
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14px; font-weight:500;
+    background:none; border:none; cursor:pointer;
+    padding:10px 6px; margin-right:14px;
+    color:var(--ink-faint);
+    border-bottom:2px solid transparent;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .tab-btn:hover{ color:var(--ink-soft); }
+  .tab-btn.active{ color:var(--primary-dark); border-bottom-color:var(--primary); font-weight:700; }
+  .stat-box{ background:var(--paper); border:1px solid var(--border); border-radius:10px; padding:14px 18px; flex:1; min-width:120px; }
+  .stat-box .num{ font-family:'Noto Sans KR',sans-serif; font-size:24px; color:var(--primary-dark); }
+  .stat-box .lbl{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+
+  .admin-toolbar{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+  .admin-toolbar input{ flex:1; min-width:160px; padding:10px 13px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:'Noto Sans KR',sans-serif; }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--border); border-radius:10px; background:var(--paper); }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; min-width:640px; }
+  thead th{ text-align:left; padding:12px 14px; background:#F3F2ED; color:var(--ink-soft); font-weight:600; font-size:12.5px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#FAFAF7; }
+  td.concern{ white-space:pre-wrap; word-break:break-word; max-width:340px; }
+  td.mono{ font-variant-numeric:tabular-nums; color:var(--ink-soft); white-space:nowrap; }
+
+  .msg-box{ text-align:center; font-size:13px; padding:10px; border-radius:8px; margin-bottom:14px; display:none; }
+  .msg-box.show{ display:block; }
+  .msg-box.ok{ background:rgba(95,141,103,0.12); color:var(--success-dark); }
+  .msg-box.bad{ background:rgba(181,72,77,0.1); color:var(--danger-dark); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  @media (max-width:600px){
+    body{ padding:20px 12px 48px; }
+    .note-card{ padding:20px 18px 18px; }
+    .row2{ grid-template-columns:1fr; }
+    td.concern{ max-width:220px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN / SIGNUP ============ -->
+<section id="screen-login" class="screen active">
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-text" style="text-align:center; width:100%;">
+        <h1>1-5 상담 신청</h1>
+      </div>
+    </div>
+
+    <div id="msg-login" class="msg-box"></div>
+
+    <!-- Login form -->
+    <div id="form-login" class="note-card">
+      <div class="field" id="f-login-name">
+        <label for="in-login-name">이름 (아이디)</label>
+        <input id="in-login-name" type="text" placeholder="예: 홍길동" autocomplete="off">
+        <div class="err">이름을 입력해주세요.</div>
+      </div>
+      <div class="field" id="f-login-pw">
+        <label for="in-login-pw">비밀번호 (숫자 4자리)</label>
+        <input id="in-login-pw" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+        <div class="err">이름 또는 비밀번호가 올바르지 않아요.</div>
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()">로그인</button>
+      <div class="link-row">처음 오셨나요? <a onclick="toggleAuthMode('signup')">회원가입 하기</a></div>
+    </div>
+
+    <!-- Signup form -->
+    <div id="form-signup" class="note-card" style="display:none;">
+      <div class="field" id="f-signup-name">
+        <label for="in-signup-name">이름 (아이디로 사용돼요)</label>
+        <input id="in-signup-name" type="text" placeholder="예: 홍길동" autocomplete="off">
+        <div class="err">이미 사용 중인 이름이에요. 다른 이름을 쓰거나 로그인해주세요.</div>
+      </div>
+      <div class="field" id="f-signup-pw">
+        <label for="in-signup-pw">비밀번호 (숫자 4자리로 정해주세요)</label>
+        <input id="in-signup-pw" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+        <div class="err">비밀번호는 숫자 4자리여야 해요.</div>
+      </div>
+      <div class="field" id="f-signup-pw2">
+        <label for="in-signup-pw2">비밀번호 확인</label>
+        <input id="in-signup-pw2" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+        <div class="err">비밀번호가 서로 달라요.</div>
+      </div>
+      <button class="btn btn-primary" onclick="handleSignup()">가입하고 시작하기</button>
+      <div class="link-row">이미 계정이 있나요? <a onclick="toggleAuthMode('login')">로그인 하기</a></div>
+    </div>
+
+    <div class="foot-link"><a onclick="showScreen('screen-admin-gate')">선생님이신가요? →</a></div>
+  </div>
+</section>
+
+<!-- ============ STUDENT DASHBOARD ============ -->
+<section id="screen-student" class="screen">
+  <div class="wrap wide">
+    <div class="top-bar">
+      <div>
+        <h2 id="student-greeting">-</h2>
+        <div class="sub">오늘도 잘 지내고 있나요?</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="handleLogout()">로그아웃</button>
+    </div>
+
+    <div id="msg-student" class="msg-box"></div>
+
+    <div class="note-card">
+      <h3 style="font-size:16px; margin-bottom:16px;">새 상담 신청</h3>
+      <div class="row2">
+        <div class="field" id="f-req-sid">
+          <label for="in-req-sid">학번</label>
+          <input id="in-req-sid" type="text" inputmode="numeric" placeholder="예: 10203">
+          <div class="err">학번을 입력해주세요.</div>
+        </div>
+        <div class="field" id="f-req-name">
+          <label for="in-req-name">이름</label>
+          <input id="in-req-name" type="text" placeholder="이름">
+          <div class="err">이름을 입력해주세요.</div>
+        </div>
+      </div>
+      <div class="field" id="f-req-concern">
+        <label for="in-req-concern">고민 사항</label>
+        <textarea id="in-req-concern" placeholder="요즘 고민이 있다면 편하게 적어주세요. 선생님만 볼 수 있어요."></textarea>
+        <div class="err">내용을 입력해주세요.</div>
+      </div>
+      <button class="btn btn-primary" onclick="submitRequest()">제출하기</button>
+    </div>
+
+    <div class="section-title">내 신청 내역 <span class="count" id="my-count">0건</span></div>
+    <div id="my-letters"></div>
+  </div>
+</section>
+
+<!-- ============ ADMIN GATE ============ -->
+<section id="screen-admin-gate" class="screen">
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-text" style="text-align:center; width:100%;">
+        <h1>선생님 로그인</h1>
+        <p>학생들의 신청 내용은 선생님만 볼 수 있어요</p>
+      </div>
+    </div>
+    <div id="msg-admin-gate" class="msg-box"></div>
+    <div class="note-card plain" id="admin-gate-card"></div>
+    <div class="foot-link"><a onclick="showScreen('screen-login')">← 학생 로그인으로 돌아가기</a></div>
+  </div>
+</section>
+
+<!-- ============ ADMIN DASHBOARD ============ -->
+<section id="screen-admin" class="screen">
+  <div class="wrap xwide">
+    <div class="top-bar">
+      <div>
+        <h2>상담 신청함</h2>
+        <div class="sub">학생들이 보낸 상담 신청 내역이에요</div>
+      </div>
+      <div class="btn-row" style="width:auto;">
+        <button class="btn btn-primary btn-sm" onclick="exportExcel()">⬇ 엑셀 다운로드</button>
+        <button class="btn btn-ghost btn-sm" onclick="adminLogout()">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="tab-btn active" id="tab-btn-requests" onclick="switchAdminTab('requests')">신청 내역</button>
+      <button class="tab-btn" id="tab-btn-members" onclick="switchAdminTab('members')">회원 목록</button>
+    </div>
+
+    <div id="admin-tab-requests">
+      <div class="stat-row">
+        <div class="stat-box"><div class="num" id="stat-total">0</div><div class="lbl">전체 신청</div></div>
+        <div class="stat-box"><div class="num" id="stat-students">0</div><div class="lbl">보낸 학생 수</div></div>
+        <div class="stat-box"><div class="num" id="stat-today">0</div><div class="lbl">오늘 도착</div></div>
+      </div>
+
+      <div class="admin-toolbar">
+        <input id="admin-search" type="text" placeholder="이름 또는 학번으로 검색" oninput="renderAdminTable()">
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>신청일</th><th>학번</th><th>이름</th><th>고민 사항</th><th>수정일</th></tr>
+          </thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+      <div id="admin-empty" class="empty" style="display:none;">아직 도착한 신청이 없어요.</div>
+    </div>
+
+    <div id="admin-tab-members" style="display:none;">
+      <div class="admin-toolbar">
+        <input id="member-search" type="text" placeholder="이름으로 검색" oninput="renderMembers()">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>이름</th><th>가입일</th><th>신청 건수</th></tr>
+          </thead>
+          <tbody id="members-tbody"></tbody>
+        </table>
+      </div>
+      <div id="members-empty" class="empty" style="display:none;">아직 가입한 학생이 없어요.</div>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ---------------- storage helpers ---------------- */
+async function getAccounts(){
+  try{ const r = await window.storage.get('accounts', true); return r ? JSON.parse(r.value) : {}; }
+  catch(e){ return {}; }
+}
+async function saveAccounts(obj){
+  try{ await window.storage.set('accounts', JSON.stringify(obj), true); }catch(e){ console.error(e); }
+}
+async function getRequests(){
+  try{ const r = await window.storage.get('requests', true); return r ? JSON.parse(r.value) : []; }
+  catch(e){ return []; }
+}
+async function saveRequests(arr){
+  try{ await window.storage.set('requests', JSON.stringify(arr), true); }catch(e){ console.error(e); }
+}
+async function getAdminConfig(){
+  try{ const r = await window.storage.get('admin_config', true); return r ? JSON.parse(r.value) : null; }
+  catch(e){ return null; }
+}
+async function saveAdminConfig(obj){
+  try{ await window.storage.set('admin_config', JSON.stringify(obj), true); }catch(e){ console.error(e); }
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function fmtDate(ts){
+  return new Date(ts).toLocaleString('ko-KR', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+function isSameDay(ts){
+  const a = new Date(ts), b = new Date();
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+/* ---------------- state ---------------- */
+let currentStudent = null; // {name}
+let isAdmin = false;
+
+/* ---------------- screen switching ---------------- */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function flash(elId, text, ok){
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = 'msg-box show ' + (ok ? 'ok' : 'bad');
+  setTimeout(()=>{ el.classList.remove('show'); }, 3500);
+}
+function setFieldErr(fieldId, on){
+  document.getElementById(fieldId).classList.toggle('has-err', !!on);
+}
+function clearFieldErrs(ids){ ids.forEach(id => setFieldErr(id, false)); }
+
+function toggleAuthMode(mode){
+  document.getElementById('form-login').style.display = mode==='login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = mode==='signup' ? 'block' : 'none';
+}
+
+/* ---------------- auth: student ---------------- */
+async function handleSignup(){
+  clearFieldErrs(['f-signup-name','f-signup-pw','f-signup-pw2']);
+  const name = document.getElementById('in-signup-name').value.trim();
+  const pw = document.getElementById('in-signup-pw').value.trim();
+  const pw2 = document.getElementById('in-signup-pw2').value.trim();
+
+  let bad = false;
+  if(!name){ setFieldErr('f-signup-name', true); bad = true; }
+  if(!/^\d{4}$/.test(pw)){ setFieldErr('f-signup-pw', true); bad = true; }
+  if(pw !== pw2){ setFieldErr('f-signup-pw2', true); bad = true; }
+  if(bad) return;
+
+  const accounts = await getAccounts();
+  if(accounts[name]){ setFieldErr('f-signup-name', true); return; }
+
+  accounts[name] = { password: pw, createdAt: Date.now() };
+  await saveAccounts(accounts);
+  currentStudent = { name };
+  enterStudentDashboard();
+}
+
+async function handleLogin(){
+  clearFieldErrs(['f-login-name','f-login-pw']);
+  const name = document.getElementById('in-login-name').value.trim();
+  const pw = document.getElementById('in-login-pw').value.trim();
+  if(!name){ setFieldErr('f-login-name', true); return; }
+
+  const accounts = await getAccounts();
+  const acc = accounts[name];
+  if(!acc || acc.password !== pw){ setFieldErr('f-login-pw', true); return; }
+
+  currentStudent = { name };
+  enterStudentDashboard();
+}
+
+function handleLogout(){
+  currentStudent = null;
+  document.getElementById('in-login-name').value = '';
+  document.getElementById('in-login-pw').value = '';
+  toggleAuthMode('login');
+  showScreen('screen-login');
+}
+
+async function enterStudentDashboard(){
+  document.getElementById('student-greeting').textContent = currentStudent.name + '님, 안녕하세요';
+  document.getElementById('in-req-name').value = currentStudent.name;
+  document.getElementById('in-req-sid').value = '';
+  document.getElementById('in-req-concern').value = '';
+  showScreen('screen-student');
+  await renderMyLetters();
+}
+
+/* ---------------- student requests ---------------- */
+async function submitRequest(){
+  clearFieldErrs(['f-req-sid','f-req-name','f-req-concern']);
+  const sid = document.getElementById('in-req-sid').value.trim();
+  const name = document.getElementById('in-req-name').value.trim();
+  const concern = document.getElementById('in-req-concern').value.trim();
+
+  let bad = false;
+  if(!sid){ setFieldErr('f-req-sid', true); bad = true; }
+  if(!name){ setFieldErr('f-req-name', true); bad = true; }
+  if(!concern){ setFieldErr('f-req-concern', true); bad = true; }
+  if(bad) return;
+
+  const requests = await getRequests();
+  const now = Date.now();
+  requests.push({
+    id: uid(),
+    owner: currentStudent.name,
+    studentId: sid,
+    name: name,
+    concern: concern,
+    createdAt: now,
+    updatedAt: now
+  });
+  await saveRequests(requests);
+
+  document.getElementById('in-req-sid').value = '';
+  document.getElementById('in-req-concern').value = '';
+  flash('msg-student', '신청이 잘 전달됐어요.', true);
+  await renderMyLetters();
+}
+
+async function renderMyLetters(){
+  const requests = await getRequests();
+  const mine = requests.filter(r => r.owner === currentStudent.name)
+                        .sort((a,b) => b.createdAt - a.createdAt);
+  document.getElementById('my-count').textContent = mine.length + '건';
+  const box = document.getElementById('my-letters');
+
+  if(mine.length === 0){
+    box.innerHTML = '<div class="empty">아직 신청한 내역이 없어요. 위에서 신청해보세요.</div>';
+    return;
+  }
+
+  box.innerHTML = mine.map(r => `
+    <div class="note-card letter-item" data-id="${r.id}">
+      <div class="letter-head">
+        <span class="letter-sid">학번 ${escapeHtml(r.studentId)}</span>
+        <span class="letter-meta">${r.updatedAt !== r.createdAt ? '수정됨 · ' : ''}${fmtDate(r.createdAt)}</span>
+      </div>
+      <div class="letter-body" data-role="view">${escapeHtml(r.concern)}</div>
+      <div data-role="edit" style="display:none;">
+        <div class="field" style="margin-top:6px;">
+          <textarea data-role="edit-textarea">${escapeHtml(r.concern)}</textarea>
+        </div>
+      </div>
+      <div class="letter-actions" data-role="view-actions">
+        <button class="btn-text" onclick="startEdit('${r.id}')">수정</button>
+        <button class="btn-danger-text" onclick="deleteLetter('${r.id}')">삭제</button>
+      </div>
+      <div class="letter-actions" data-role="edit-actions" style="display:none;">
+        <button class="btn-text" onclick="cancelEdit('${r.id}')">취소</button>
+        <button class="btn-text" onclick="saveEdit('${r.id}')">저장</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function findCard(id){ return document.querySelector(`.letter-item[data-id="${id}"]`); }
+
+function startEdit(id){
+  const card = findCard(id);
+  card.querySelector('[data-role="view"]').style.display = 'none';
+  card.querySelector('[data-role="edit"]').style.display = 'block';
+  card.querySelector('[data-role="view-actions"]').style.display = 'none';
+  card.querySelector('[data-role="edit-actions"]').style.display = 'flex';
+}
+function cancelEdit(id){
+  const card = findCard(id);
+  card.querySelector('[data-role="view"]').style.display = 'block';
+  card.querySelector('[data-role="edit"]').style.display = 'none';
+  card.querySelector('[data-role="view-actions"]').style.display = 'flex';
+  card.querySelector('[data-role="edit-actions"]').style.display = 'none';
+}
+async function saveEdit(id){
+  const card = findCard(id);
+  const newText = card.querySelector('[data-role="edit-textarea"]').value.trim();
+  if(!newText) return;
+  const requests = await getRequests();
+  const idx = requests.findIndex(r => r.id === id);
+  if(idx > -1){
+    requests[idx].concern = newText;
+    requests[idx].updatedAt = Date.now();
+    await saveRequests(requests);
+  }
+  flash('msg-student', '신청 내용을 수정했어요.', true);
+  await renderMyLetters();
+}
+async function deleteLetter(id){
+  if(!window.confirm('정말 삭제할까요? 되돌릴 수 없어요.')) return;
+  let requests = await getRequests();
+  requests = requests.filter(r => r.id !== id);
+  await saveRequests(requests);
+  await renderMyLetters();
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ---------------- admin ---------------- */
+async function renderAdminGate(){
+  const cfg = await getAdminConfig();
+  const card = document.getElementById('admin-gate-card');
+  if(!cfg){
+    card.innerHTML = `
+      <p style="font-size:13.5px; color:var(--ink-soft); margin-top:0;">처음이시네요. 신청함을 열어볼 비밀번호를 정해주세요.</p>
+      <div class="field" id="f-setup-pw">
+        <label for="in-setup-pw">관리자 비밀번호 (4자 이상)</label>
+        <input id="in-setup-pw" type="password">
+        <div class="err">비밀번호는 4자 이상으로 정해주세요.</div>
+      </div>
+      <div class="field" id="f-setup-pw2">
+        <label for="in-setup-pw2">비밀번호 확인</label>
+        <input id="in-setup-pw2" type="password">
+        <div class="err">비밀번호가 서로 달라요.</div>
+      </div>
+      <button class="btn btn-primary" onclick="setupAdmin()">설정하고 들어가기</button>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="field" id="f-admin-pw">
+        <label for="in-admin-pw">관리자 비밀번호</label>
+        <input id="in-admin-pw" type="password">
+        <div class="err">비밀번호가 올바르지 않아요.</div>
+      </div>
+      <button class="btn btn-primary" onclick="loginAdmin()">들어가기</button>
+    `;
+  }
+}
+
+async function setupAdmin(){
+  clearFieldErrs(['f-setup-pw','f-setup-pw2']);
+  const pw = document.getElementById('in-setup-pw').value;
+  const pw2 = document.getElementById('in-setup-pw2').value;
+  let bad = false;
+  if(!pw || pw.length < 4){ setFieldErr('f-setup-pw', true); bad = true; }
+  if(pw !== pw2){ setFieldErr('f-setup-pw2', true); bad = true; }
+  if(bad) return;
+  await saveAdminConfig({ password: pw });
+  isAdmin = true;
+  await enterAdminDashboard();
+}
+
+async function loginAdmin(){
+  clearFieldErrs(['f-admin-pw']);
+  const pw = document.getElementById('in-admin-pw').value;
+  const cfg = await getAdminConfig();
+  if(!cfg || cfg.password !== pw){ setFieldErr('f-admin-pw', true); return; }
+  isAdmin = true;
+  await enterAdminDashboard();
+}
+
+function adminLogout(){
+  isAdmin = false;
+  showScreen('screen-login');
+}
+
+async function enterAdminDashboard(){
+  showScreen('screen-admin');
+  document.getElementById('admin-search').value = '';
+  switchAdminTab('requests');
+  await renderAdminTable();
+}
+
+async function renderAdminTable(){
+  const requests = await getRequests();
+  const q = document.getElementById('admin-search').value.trim().toLowerCase();
+  const filtered = requests
+    .filter(r => !q || r.name.toLowerCase().includes(q) || r.studentId.toLowerCase().includes(q))
+    .sort((a,b) => b.createdAt - a.createdAt);
+
+  document.getElementById('stat-total').textContent = requests.length;
+  document.getElementById('stat-students').textContent = new Set(requests.map(r=>r.owner)).size;
+  document.getElementById('stat-today').textContent = requests.filter(r => isSameDay(r.createdAt)).length;
+
+  const tbody = document.getElementById('admin-tbody');
+  const emptyEl = document.getElementById('admin-empty');
+  const tableWrap = document.querySelector('.table-wrap');
+
+  if(filtered.length === 0){
+    tbody.innerHTML = '';
+    tableWrap.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  tableWrap.style.display = 'block';
+  emptyEl.style.display = 'none';
+
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td class="mono">${fmtDate(r.createdAt)}</td>
+      <td class="mono">${escapeHtml(r.studentId)}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td class="concern">${escapeHtml(r.concern)}</td>
+      <td class="mono">${r.updatedAt !== r.createdAt ? fmtDate(r.updatedAt) : '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function exportExcel(){
+  getRequests().then(requests => {
+    const rows = requests
+      .sort((a,b) => a.createdAt - b.createdAt)
+      .map(r => ({
+        '신청일': fmtDate(r.createdAt),
+        '학번': r.studentId,
+        '이름': r.name,
+        '고민 사항': r.concern,
+        '수정일': r.updatedAt !== r.createdAt ? fmtDate(r.updatedAt) : ''
+      }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{wch:14},{wch:10},{wch:12},{wch:50},{wch:14}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '상담신청내역');
+    XLSX.writeFile(wb, '상담신청내역.xlsx');
+  });
+}
+
+function switchAdminTab(tab){
+  document.getElementById('tab-btn-requests').classList.toggle('active', tab==='requests');
+  document.getElementById('tab-btn-members').classList.toggle('active', tab==='members');
+  document.getElementById('admin-tab-requests').style.display = tab==='requests' ? 'block' : 'none';
+  document.getElementById('admin-tab-members').style.display = tab==='members' ? 'block' : 'none';
+  if(tab === 'members') renderMembers();
+}
+
+async function renderMembers(){
+  const accounts = await getAccounts();
+  const requests = await getRequests();
+  const q = document.getElementById('member-search').value.trim().toLowerCase();
+
+  const counts = {};
+  requests.forEach(r => { counts[r.owner] = (counts[r.owner] || 0) + 1; });
+
+  const rows = Object.keys(accounts)
+    .filter(name => !q || name.toLowerCase().includes(q))
+    .map(name => ({ name, createdAt: accounts[name].createdAt, count: counts[name] || 0 }))
+    .sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+
+  const tbody = document.getElementById('members-tbody');
+  const emptyEl = document.getElementById('members-empty');
+  const wrap = document.querySelector('#admin-tab-members .table-wrap');
+
+  if(rows.length === 0){
+    tbody.innerHTML = '';
+    wrap.style.display = 'none';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  wrap.style.display = 'block';
+  emptyEl.style.display = 'none';
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.name)}</td>
+      <td class="mono">${fmtDate(r.createdAt)}</td>
+      <td class="mono">${r.count}건</td>
+    </tr>
+  `).join('');
+}
+
+/* ---------------- init ---------------- */
+document.getElementById('screen-admin-gate').addEventListener('transitionend', ()=>{});
+const gateObserver = new MutationObserver(() => {
+  if(document.getElementById('screen-admin-gate').classList.contains('active')){
+    renderAdminGate();
+  }
+});
+gateObserver.observe(document.getElementById('screen-admin-gate'), { attributes:true, attributeFilter:['class'] });
+
+document.getElementById('in-signup-pw').addEventListener('input', e=>{
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,4);
+});
+document.getElementById('in-signup-pw2').addEventListener('input', e=>{
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,4);
+});
+document.getElementById('in-login-pw').addEventListener('input', e=>{
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,4);
+});
+</script>
+</body>
+</html>
