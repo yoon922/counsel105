@@ -69,6 +69,7 @@
 
   .field{ margin-bottom:16px; }
   .field label{ display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px; }
+  .field label .label-hint{ font-weight:400; color:var(--ink-faint); margin-left:4px; }
   .field input, .field textarea{
     width:100%;
     font-family:'Noto Sans KR', sans-serif;
@@ -119,6 +120,32 @@
   .link-row{ text-align:center; margin-top:16px; font-size:13.5px; color:var(--ink-soft); }
   .link-row a{ color:var(--primary); cursor:pointer; text-decoration:none; font-weight:500; }
   .link-row a:hover{ text-decoration:underline; }
+
+  .auth-tabs{
+    display:flex;
+    background:var(--bg);
+    border-radius:999px;
+    padding:4px;
+    margin-bottom:22px;
+    gap:4px;
+  }
+  .auth-tab{
+    flex:1;
+    font-family:'Noto Sans KR', sans-serif;
+    font-size:14.5px; font-weight:600;
+    padding:10px 0;
+    border:none; border-radius:999px;
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .auth-tab.active{
+    background:var(--paper);
+    color:var(--primary-dark);
+    box-shadow:0 1px 4px rgba(14,165,233,0.18);
+  }
+  .auth-tab:hover:not(.active){ color:var(--ink); }
 
   .foot-link{ text-align:center; margin-top:22px; }
   .foot-link a{ font-size:12.5px; color:var(--ink-faint); cursor:pointer; }
@@ -209,41 +236,51 @@
 
     <div id="msg-login" class="msg-box"></div>
 
-    <!-- Login form -->
-    <div id="form-login" class="note-card">
-      <div class="field" id="f-login-name">
-        <label for="in-login-name">이름 (아이디)</label>
-        <input id="in-login-name" type="text" placeholder="예: 홍길동" autocomplete="off">
-        <div class="err">이름을 입력해주세요.</div>
+    <div class="note-card" style="padding-top:10px;">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="atab-login" onclick="toggleAuthMode('login')">로그인</button>
+        <button class="auth-tab" id="atab-signup" onclick="toggleAuthMode('signup')">회원가입</button>
       </div>
-      <div class="field" id="f-login-pw">
-        <label for="in-login-pw">비밀번호 (숫자 4자리)</label>
-        <input id="in-login-pw" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-        <div class="err">이름 또는 비밀번호가 올바르지 않아요.</div>
-      </div>
-      <button class="btn btn-primary" onclick="handleLogin()">로그인</button>
-      <div class="link-row">처음 오셨나요? <a onclick="toggleAuthMode('signup')">회원가입 하기</a></div>
-    </div>
 
-    <!-- Signup form -->
-    <div id="form-signup" class="note-card" style="display:none;">
-      <div class="field" id="f-signup-name">
-        <label for="in-signup-name">이름 (아이디로 사용돼요)</label>
-        <input id="in-signup-name" type="text" placeholder="예: 홍길동" autocomplete="off">
-        <div class="err">이미 사용 중인 이름이에요. 다른 이름을 쓰거나 로그인해주세요.</div>
+      <!-- Login form -->
+      <div id="form-login">
+        <div class="field" id="f-login-name">
+          <label for="in-login-name">이름 <span class="label-hint">아이디로 사용돼요</span></label>
+          <input id="in-login-name" type="text" placeholder="예) 홍길동" autocomplete="off">
+          <div class="err">이름을 입력해주세요.</div>
+        </div>
+        <div class="field" id="f-login-pw">
+          <label for="in-login-pw">비밀번호 <span class="label-hint">숫자 4자리</span></label>
+          <input id="in-login-pw" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 입력">
+          <div class="err">이름 또는 비밀번호가 올바르지 않아요.</div>
+        </div>
+        <button class="btn btn-primary" onclick="handleLogin()">로그인</button>
       </div>
-      <div class="field" id="f-signup-pw">
-        <label for="in-signup-pw">비밀번호 (숫자 4자리로 정해주세요)</label>
-        <input id="in-signup-pw" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-        <div class="err">비밀번호는 숫자 4자리여야 해요.</div>
+
+      <!-- Signup form -->
+      <div id="form-signup" style="display:none;">
+        <div class="field" id="f-signup-name">
+          <label for="in-signup-name">이름 <span class="label-hint">아이디로 사용돼요</span></label>
+          <input id="in-signup-name" type="text" placeholder="예) 홍길동" autocomplete="off">
+          <div class="err">이미 사용 중인 이름이에요. 다른 이름을 쓰거나 로그인해주세요.</div>
+        </div>
+        <div class="field" id="f-signup-sid">
+          <label for="in-signup-sid">학번</label>
+          <input id="in-signup-sid" type="text" inputmode="numeric" maxlength="5" placeholder="예) 10101">
+          <div class="err">학번 5자리를 입력해주세요.</div>
+        </div>
+        <div class="field" id="f-signup-pw">
+          <label for="in-signup-pw">비밀번호 <span class="label-hint">숫자 4자리로 정해주세요</span></label>
+          <input id="in-signup-pw" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 설정">
+          <div class="err">비밀번호는 숫자 4자리여야 해요.</div>
+        </div>
+        <div class="field" id="f-signup-pw2">
+          <label for="in-signup-pw2">비밀번호 확인</label>
+          <input id="in-signup-pw2" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 재입력">
+          <div class="err">비밀번호가 서로 달라요.</div>
+        </div>
+        <button class="btn btn-primary" onclick="handleSignup()">가입하고 시작하기</button>
       </div>
-      <div class="field" id="f-signup-pw2">
-        <label for="in-signup-pw2">비밀번호 확인</label>
-        <input id="in-signup-pw2" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-        <div class="err">비밀번호가 서로 달라요.</div>
-      </div>
-      <button class="btn btn-primary" onclick="handleSignup()">가입하고 시작하기</button>
-      <div class="link-row">이미 계정이 있나요? <a onclick="toggleAuthMode('login')">로그인 하기</a></div>
     </div>
 
     <div class="foot-link"><a onclick="showScreen('screen-admin-gate')">선생님이신가요? →</a></div>
@@ -265,17 +302,10 @@
 
     <div class="note-card">
       <h3 style="font-size:16px; margin-bottom:16px;">새 상담 신청</h3>
-      <div class="row2">
-        <div class="field" id="f-req-sid">
-          <label for="in-req-sid">학번</label>
-          <input id="in-req-sid" type="text" inputmode="numeric" placeholder="예: 10203">
-          <div class="err">학번을 입력해주세요.</div>
-        </div>
-        <div class="field" id="f-req-name">
-          <label for="in-req-name">이름</label>
-          <input id="in-req-name" type="text" placeholder="이름">
-          <div class="err">이름을 입력해주세요.</div>
-        </div>
+      <div class="field" id="f-req-name">
+        <label for="in-req-name">이름</label>
+        <input id="in-req-name" type="text" placeholder="이름">
+        <div class="err">이름을 입력해주세요.</div>
       </div>
       <div class="field" id="f-req-concern">
         <label for="in-req-concern">상담 필요한 내용</label>
@@ -353,7 +383,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>이름</th><th>가입일</th><th>신청 건수</th></tr>
+            <tr><th>이름</th><th>학번</th><th>가입일</th><th>신청 건수</th></tr>
           </thead>
           <tbody id="members-tbody"></tbody>
         </table>
@@ -454,16 +484,20 @@ function clearFieldErrs(ids){ ids.forEach(id => setFieldErr(id, false)); }
 function toggleAuthMode(mode){
   document.getElementById('form-login').style.display = mode==='login' ? 'block' : 'none';
   document.getElementById('form-signup').style.display = mode==='signup' ? 'block' : 'none';
+  document.getElementById('atab-login').classList.toggle('active', mode==='login');
+  document.getElementById('atab-signup').classList.toggle('active', mode==='signup');
 }
 
 /* ---------------- auth: student ---------------- */
 async function handleSignup(){
-  clearFieldErrs(['f-signup-name','f-signup-pw','f-signup-pw2']);
+  clearFieldErrs(['f-signup-sid','f-signup-name','f-signup-pw','f-signup-pw2']);
+  const sid = document.getElementById('in-signup-sid').value.trim();
   const name = document.getElementById('in-signup-name').value.trim();
   const pw = document.getElementById('in-signup-pw').value.trim();
   const pw2 = document.getElementById('in-signup-pw2').value.trim();
 
   let bad = false;
+  if(!/^\d{5}$/.test(sid)){ setFieldErr('f-signup-sid', true); bad = true; }
   if(!name){ setFieldErr('f-signup-name', true); bad = true; }
   if(!/^\d{4}$/.test(pw)){ setFieldErr('f-signup-pw', true); bad = true; }
   if(pw !== pw2){ setFieldErr('f-signup-pw2', true); bad = true; }
@@ -472,12 +506,14 @@ async function handleSignup(){
   const accounts = await getAccounts();
   if(accounts[name]){ setFieldErr('f-signup-name', true); return; }
 
-  accounts[name] = { password: pw, createdAt: Date.now() };
+  accounts[name] = { password: pw, studentId: sid, createdAt: Date.now() };
   await saveAccounts(accounts);
   currentStudent = { name };
   localStorage.setItem('counsel_student', name);
   enterStudentDashboard();
 }
+
+async function handleLogin(){
   clearFieldErrs(['f-login-name','f-login-pw']);
   const name = document.getElementById('in-login-name').value.trim();
   const pw = document.getElementById('in-login-pw').value.trim();
@@ -504,7 +540,6 @@ function handleLogout(){
 async function enterStudentDashboard(){
   document.getElementById('student-greeting').textContent = currentStudent.name + '님, 안녕하세요';
   document.getElementById('in-req-name').value = currentStudent.name;
-  document.getElementById('in-req-sid').value = '';
   document.getElementById('in-req-concern').value = '';
   showScreen('screen-student');
   await renderMyLetters();
@@ -512,16 +547,17 @@ async function enterStudentDashboard(){
 
 /* ---------------- student requests ---------------- */
 async function submitRequest(){
-  clearFieldErrs(['f-req-sid','f-req-name','f-req-concern']);
-  const sid = document.getElementById('in-req-sid').value.trim();
+  clearFieldErrs(['f-req-name','f-req-concern']);
   const name = document.getElementById('in-req-name').value.trim();
   const concern = document.getElementById('in-req-concern').value.trim();
 
   let bad = false;
-  if(!sid){ setFieldErr('f-req-sid', true); bad = true; }
   if(!name){ setFieldErr('f-req-name', true); bad = true; }
   if(!concern){ setFieldErr('f-req-concern', true); bad = true; }
   if(bad) return;
+
+  const accounts = await getAccounts();
+  const sid = (accounts[currentStudent.name] && accounts[currentStudent.name].studentId) || '';
 
   const requests = await getRequests();
   const now = Date.now();
@@ -536,7 +572,6 @@ async function submitRequest(){
   });
   await saveRequests(requests);
 
-  document.getElementById('in-req-sid').value = '';
   document.getElementById('in-req-concern').value = '';
   flash('msg-student', '신청이 잘 전달됐어요.', true);
   await renderMyLetters();
@@ -762,7 +797,7 @@ async function renderMembers(){
 
   const rows = Object.keys(accounts)
     .filter(name => !q || name.toLowerCase().includes(q))
-    .map(name => ({ name, createdAt: accounts[name].createdAt, count: counts[name] || 0 }))
+    .map(name => ({ name, studentId: accounts[name].studentId || '-', createdAt: accounts[name].createdAt, count: counts[name] || 0 }))
     .sort((a,b) => a.name.localeCompare(b.name, 'ko'));
 
   const tbody = document.getElementById('members-tbody');
@@ -781,6 +816,7 @@ async function renderMembers(){
   tbody.innerHTML = rows.map(r => `
     <tr>
       <td>${escapeHtml(r.name)}</td>
+      <td class="mono">${escapeHtml(r.studentId)}</td>
       <td class="mono">${fmtDate(r.createdAt)}</td>
       <td class="mono">${r.count}건</td>
     </tr>
@@ -796,6 +832,9 @@ const gateObserver = new MutationObserver(() => {
 });
 gateObserver.observe(document.getElementById('screen-admin-gate'), { attributes:true, attributeFilter:['class'] });
 
+document.getElementById('in-signup-sid').addEventListener('input', e=>{
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,5);
+});
 document.getElementById('in-signup-pw').addEventListener('input', e=>{
   e.target.value = e.target.value.replace(/\D/g,'').slice(0,4);
 });
