@@ -5,6 +5,9 @@
 <meta name="robots" content="noindex, nofollow, noarchive">
 <title>1-5 상담 신청</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
 
@@ -275,8 +278,8 @@
         </div>
       </div>
       <div class="field" id="f-req-concern">
-        <label for="in-req-concern">고민 사항</label>
-        <textarea id="in-req-concern" placeholder="요즘 고민이 있다면 편하게 적어주세요. 선생님만 볼 수 있어요."></textarea>
+        <label for="in-req-concern">상담 필요한 내용</label>
+        <textarea id="in-req-concern" placeholder="상담이 필요한 내용을 편하게 적어주세요. 선생님만 볼 수 있어요."></textarea>
         <div class="err">내용을 입력해주세요.</div>
       </div>
       <button class="btn btn-primary" onclick="submitRequest()">제출하기</button>
@@ -335,7 +338,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>신청일</th><th>학번</th><th>이름</th><th>고민 사항</th><th>수정일</th></tr>
+            <tr><th>신청일</th><th>학번</th><th>이름</th><th>상담 필요한 내용</th><th>수정일</th></tr>
           </thead>
           <tbody id="admin-tbody"></tbody>
         </table>
@@ -361,27 +364,62 @@
 </section>
 
 <script>
+/* ---------------- Firebase 연결 ---------------- */
+/* 아래 firebaseConfig 안의 값을 본인 Firebase 프로젝트 값으로 바꿔주세요 */
+const firebaseConfig = {
+  apiKey: "AIzaSyD6tiLDLA-LOapHUwd3t_0ZBStpj3TK780",
+  authDomain: "counsel-7fc14.firebaseapp.com",
+  projectId: "counsel-7fc14",
+  storageBucket: "counsel-7fc14.firebasestorage.app",
+  messagingSenderId: "1089293171102",
+  appId: "1:1089293171102:web:cecff2c7f1fb9f022efe8f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* 이 사이트를 통해 들어온 사람만 인증되도록 익명 로그인을 걸어둡니다 */
+const authReady = new Promise((resolve) => {
+  firebase.auth().onAuthStateChanged(user => {
+    if(user) resolve();
+  });
+  firebase.auth().signInAnonymously().catch(err => console.error('auth error', err));
+});
+
+async function storageGet(key){
+  try{
+    await authReady;
+    const doc = await db.collection('store').doc(key).get();
+    return doc.exists ? doc.data().value : null;
+  }catch(e){ console.error(e); return null; }
+}
+async function storageSet(key, value){
+  try{
+    await authReady;
+    await db.collection('store').doc(key).set({ value });
+  }
+  catch(e){ console.error(e); }
+}
+
 /* ---------------- storage helpers ---------------- */
 async function getAccounts(){
-  try{ const r = await window.storage.get('accounts', true); return r ? JSON.parse(r.value) : {}; }
-  catch(e){ return {}; }
+  const v = await storageGet('accounts');
+  return v || {};
 }
 async function saveAccounts(obj){
-  try{ await window.storage.set('accounts', JSON.stringify(obj), true); }catch(e){ console.error(e); }
+  await storageSet('accounts', obj);
 }
 async function getRequests(){
-  try{ const r = await window.storage.get('requests', true); return r ? JSON.parse(r.value) : []; }
-  catch(e){ return []; }
+  const v = await storageGet('requests');
+  return v || [];
 }
 async function saveRequests(arr){
-  try{ await window.storage.set('requests', JSON.stringify(arr), true); }catch(e){ console.error(e); }
+  await storageSet('requests', arr);
 }
 async function getAdminConfig(){
-  try{ const r = await window.storage.get('admin_config', true); return r ? JSON.parse(r.value) : null; }
-  catch(e){ return null; }
+  return await storageGet('admin_config');
 }
 async function saveAdminConfig(obj){
-  try{ await window.storage.set('admin_config', JSON.stringify(obj), true); }catch(e){ console.error(e); }
+  await storageSet('admin_config', obj);
 }
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -691,7 +729,7 @@ function exportExcel(){
         '신청일': fmtDate(r.createdAt),
         '학번': r.studentId,
         '이름': r.name,
-        '고민 사항': r.concern,
+        '상담 필요한 내용': r.concern,
         '수정일': r.updatedAt !== r.createdAt ? fmtDate(r.updatedAt) : ''
       }));
     const ws = XLSX.utils.json_to_sheet(rows);
