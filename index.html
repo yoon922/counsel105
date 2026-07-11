@@ -475,10 +475,9 @@ async function handleSignup(){
   accounts[name] = { password: pw, createdAt: Date.now() };
   await saveAccounts(accounts);
   currentStudent = { name };
+  localStorage.setItem('counsel_student', name);
   enterStudentDashboard();
 }
-
-async function handleLogin(){
   clearFieldErrs(['f-login-name','f-login-pw']);
   const name = document.getElementById('in-login-name').value.trim();
   const pw = document.getElementById('in-login-pw').value.trim();
@@ -489,11 +488,13 @@ async function handleLogin(){
   if(!acc || acc.password !== pw){ setFieldErr('f-login-pw', true); return; }
 
   currentStudent = { name };
+  localStorage.setItem('counsel_student', name);
   enterStudentDashboard();
 }
 
 function handleLogout(){
   currentStudent = null;
+  localStorage.removeItem('counsel_student');
   document.getElementById('in-login-name').value = '';
   document.getElementById('in-login-pw').value = '';
   toggleAuthMode('login');
@@ -662,6 +663,7 @@ async function setupAdmin(){
   if(bad) return;
   await saveAdminConfig({ password: pw });
   isAdmin = true;
+  localStorage.setItem('counsel_admin', 'true');
   await enterAdminDashboard();
 }
 
@@ -671,11 +673,13 @@ async function loginAdmin(){
   const cfg = await getAdminConfig();
   if(!cfg || cfg.password !== pw){ setFieldErr('f-admin-pw', true); return; }
   isAdmin = true;
+  localStorage.setItem('counsel_admin', 'true');
   await enterAdminDashboard();
 }
 
 function adminLogout(){
   isAdmin = false;
+  localStorage.removeItem('counsel_admin');
   showScreen('screen-login');
 }
 
@@ -801,6 +805,24 @@ document.getElementById('in-signup-pw2').addEventListener('input', e=>{
 document.getElementById('in-login-pw').addEventListener('input', e=>{
   e.target.value = e.target.value.replace(/\D/g,'').slice(0,4);
 });
+
+/* 새로고침해도 로그인이 풀리지 않도록 저장된 세션 복원 */
+(async function restoreSession(){
+  const savedAdmin = localStorage.getItem('counsel_admin');
+  const savedStudent = localStorage.getItem('counsel_student');
+
+  if(savedAdmin === 'true'){
+    isAdmin = true;
+    await enterAdminDashboard();
+    return;
+  }
+  if(savedStudent){
+    currentStudent = { name: savedStudent };
+    await enterStudentDashboard();
+    return;
+  }
+})();
+
 </script>
 </body>
 </html>
